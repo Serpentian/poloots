@@ -36,3 +36,8 @@ export type BenchmarkResponse = {
     parallel?: number[];
   };
 };
+
+export type LastProblem = {
+  p: number;
+  coeffs: number[]; // a0..an
+};

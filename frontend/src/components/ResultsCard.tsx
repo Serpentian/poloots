@@ -1,5 +1,5 @@
 import React from "react";
-import type { RootsResponse, BenchmarkResponse } from "../types";
+import type { RootsResponse, BenchmarkResponse, LastProblem } from "../types";
 
 function fmtList(arr?: number[]) {
   if (!arr) return "—";
@@ -7,12 +7,48 @@ function fmtList(arr?: number[]) {
   return arr.join(", ");
 }
 
+function formatPoly(coeffs: number[]): string {
+  // coeffs: a0..an, строим "x^3 - 2x + 1" (без mod тут, mod добавим отдельно)
+  if (!coeffs || coeffs.length === 0) return "0";
+
+  const terms: string[] = [];
+  for (let i = coeffs.length - 1; i >= 0; i--) {
+    const a = coeffs[i];
+    if (!Number.isFinite(a) || a === 0) continue;
+
+    const absA = Math.abs(a);
+    const sign = a < 0 ? "-" : "+";
+
+    let term = "";
+    if (i === 0) {
+      term = `${absA}`;
+    } else if (i === 1) {
+      if (absA === 1) term = "x";
+      else term = `${absA}x`;
+    } else {
+      if (absA === 1) term = `x^${i}`;
+      else term = `${absA}x^${i}`;
+    }
+
+    // первый терм без ведущего "+"
+    if (terms.length === 0) {
+      terms.push(a < 0 ? `-${term}` : term);
+    } else {
+      terms.push(`${sign} ${term}`);
+    }
+  }
+
+  return terms.length ? terms.join(" ") : "0";
+}
+
 export default function ResultsCard({
   rootsResult,
-  benchmarkResult
+  benchmarkResult,
+  lastProblem
 }: {
   rootsResult: RootsResponse | null;
   benchmarkResult: BenchmarkResponse | null;
+  lastProblem: LastProblem | null;
 }) {
   const cpu = rootsResult?.timings_ms?.sequential;
   const gpu = rootsResult?.timings_ms?.parallel;
@@ -28,7 +64,36 @@ export default function ResultsCard({
       </div>
 
       <div className="cardBody">
-        <div className="sectionTitle">Один многочлен</div>
+        {/* Показываем уравнение, если есть последний ввод */}
+        <div className="sectionTitle">Что решаем</div>
+        {lastProblem ? (
+          <div style={{ marginBottom: 14 }}>
+            <div className="help">Ищем все x ∈ Fₚ, такие что:</div>
+            <div
+              className="mono"
+              style={{
+                marginTop: 8,
+                padding: "10px 12px",
+                borderRadius: 14,
+                border: "1px solid rgba(255,255,255,.12)",
+                background: "rgba(0,0,0,.20)",
+                fontSize: 14,
+                lineHeight: 1.45
+              }}
+            >
+              f(x) = {formatPoly(lastProblem.coeffs)} (mod {lastProblem.p})<br />
+              f(x) ≡ 0 (mod {lastProblem.p})
+            </div>
+          </div>
+        ) : (
+          <div className="help" style={{ marginBottom: 14 }}>
+            Введи коэффициенты и нажми “Вычислить корни” — тут появится уравнение.
+          </div>
+        )}
+
+        <hr className="hr" />
+
+        <div className="sectionTitle">Корни</div>
         {rootsResult ? (
           <>
             <div className="kv">
@@ -70,7 +135,7 @@ export default function ResultsCard({
 
       <div className="cardFooter">
         <div className="help">
-          Для честного сравнения: прогрев CUDA + несколько прогонов и медиана (лучше делать на бэкенде).
+          Никто не поможет.
         </div>
       </div>
     </div>

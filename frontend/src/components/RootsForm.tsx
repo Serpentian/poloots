@@ -12,7 +12,13 @@ function parseCoeffs(input: string): number[] {
     .map((x) => Number(x));
 }
 
-export default function RootsForm({ onResult }: { onResult: (r: RootsResponse) => void }) {
+export default function RootsForm({
+  onResult,
+  onProblemChange
+}: {
+  onResult: (r: RootsResponse) => void;
+  onProblemChange: (p: number, coeffs: number[]) => void;
+}) {
   const [p, setP] = useState<number>(101);
   const [coeffsText, setCoeffsText] = useState<string>("1 0 0 1");
   const [algorithm, setAlgorithm] = useState<Algorithm>("both");
@@ -26,6 +32,7 @@ export default function RootsForm({ onResult }: { onResult: (r: RootsResponse) =
     setLoading(true);
     setError(null);
     try {
+      onProblemChange(p, coeffs);
       const res = await api.roots({ p, coeffs, algorithm });
       onResult(res);
     } catch (e: any) {

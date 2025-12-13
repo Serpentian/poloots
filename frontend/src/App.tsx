@@ -2,20 +2,19 @@ import React, { useState } from "react";
 import RootsForm from "./components/RootsForm";
 import ResultsCard from "./components/ResultsCard";
 import BenchmarkPanel from "./components/BenchmarkPanel";
-import type { RootsResponse, BenchmarkResponse } from "./types";
+import type { RootsResponse, BenchmarkResponse, LastProblem } from "./types";
 
 export default function App() {
   const [rootsResult, setRootsResult] = useState<RootsResponse | null>(null);
   const [benchmarkResult, setBenchmarkResult] = useState<BenchmarkResponse | null>(null);
+  const [lastProblem, setLastProblem] = useState<LastProblem | null>(null);
 
   return (
     <div className="container">
       <div className="header">
         <div className="brand">
           <h1 className="h1">Корни многочлена в поле Fₚ</h1>
-          <p className="sub">
-            Ввод → вычисление корней (CPU/GPU) → бенчмарк → график времени
-          </p>
+          <p className="sub">Ввод → вычисление корней (CPU/GPU) → бенчмарк → график времени</p>
         </div>
 
         <div className="pills" aria-label="legend">
@@ -27,11 +26,18 @@ export default function App() {
 
       <div className="grid">
         <div style={{ display: "grid", gap: 16 }}>
-          <RootsForm onResult={setRootsResult} />
+          <RootsForm
+            onResult={setRootsResult}
+            onProblemChange={(p, coeffs) => setLastProblem({ p, coeffs })}
+          />
           <BenchmarkPanel onResult={setBenchmarkResult} />
         </div>
 
-        <ResultsCard rootsResult={rootsResult} benchmarkResult={benchmarkResult} />
+        <ResultsCard
+          rootsResult={rootsResult}
+          benchmarkResult={benchmarkResult}
+          lastProblem={lastProblem}
+        />
       </div>
     </div>
   );
