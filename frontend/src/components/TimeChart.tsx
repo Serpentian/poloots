@@ -38,11 +38,18 @@ export default function TimeChart({ data }: { data: BenchmarkResponse }) {
       borderWidth: 2
     });
   }
-  if (data.timings_ms.parallel) {
+  if (data.timings_ms.gpu_opencl) {
     datasets.push({
       label: "Parallel (GPU), ms",
-      data: data.timings_ms.parallel,
+      data: data.timings_ms.gpu_opencl,
       borderWidth: 2
+    });
+  }
+  if (data.timings_ms.cpu_parallel) {
+    datasets.push({
+        label: "CPU parallel, ms",
+        data: data.timings_ms.cpu_parallel,
+        borderWidth: 2
     });
   }
 

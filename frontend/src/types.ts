@@ -1,4 +1,4 @@
-export type Algorithm = "sequential" | "parallel" | "both";
+export type Algorithm = "sequential" | "cpu_parallel" | "gpu_opencl" | "all";
 
 export type RootsRequest = {
   p: number;                 // модуль

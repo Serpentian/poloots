@@ -99,16 +99,20 @@ export default function ResultsCard({
             <div className="kv">
               <div className="k">p</div><div className="v"><b>{rootsResult.p}</b></div>
               <div className="k">degree</div><div className="v"><b>{rootsResult.degree}</b></div>
-              <div className="k">roots (CPU)</div><div className="v">{fmtList(rootsResult.roots.sequential)}</div>
-              <div className="k">roots (GPU)</div><div className="v">{fmtList(rootsResult.roots.parallel)}</div>
+                  <div className="k">roots (CPU seq)</div><div className="v">{fmtList(rootsResult.roots.sequential)}</div>
+                  <div className="k">roots (CPU par)</div><div className="v">{fmtList(rootsResult.roots.cpu_parallel)}</div>
+                  <div className="k">roots (GPU)</div><div className="v">{fmtList(rootsResult.roots.gpu_opencl)}</div>
               <div className="k">time (ms)</div>
               <div className="v">
-                <span className="pill" style={{ marginRight: 8 }}>
-                  <span className="dot dotAccent" /> CPU: <b>{cpu ?? "—"}</b>
-                </span>
-                <span className="pill">
-                  <span className="dot dotGreen" /> GPU: <b>{gpu ?? "—"}</b>
-                </span>
+                  <span className="pill" style={{ marginRight: 8 }}>
+                    <span className="dot dotAccent" /> CPU seq: <b>{rootsResult.timings_ms?.sequential ?? "—"}</b>
+                  </span>
+                  <span className="pill" style={{ marginRight: 8 }}>
+                    <span className="dot dotWarn" /> CPU par: <b>{rootsResult.timings_ms?.cpu_parallel ?? "—"}</b>
+                  </span>
+                  <span className="pill">
+                    <span className="dot dotGreen" /> GPU: <b>{rootsResult.timings_ms?.gpu_opencl ?? "—"}</b>
+                  </span>
               </div>
             </div>
           </>

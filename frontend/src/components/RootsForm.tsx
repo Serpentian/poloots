@@ -85,8 +85,9 @@ export default function RootsForm({
             onChange={(e) => setAlgorithm(e.target.value as Algorithm)}
           >
             <option value="sequential">Последовательный (CPU)</option>
-            <option value="parallel">Параллельный (GPU)</option>
-            <option value="both">Оба (сравнить)</option>
+            <option value="cpu_parallel">Параллельный CPU (Numba prange)</option>
+            <option value="gpu_opencl">Параллельный GPU (OpenCL)</option>
+            <option value="all">Все три (сравнить)</option>
           </select>
         </div>
 

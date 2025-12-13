@@ -65,9 +65,10 @@ export default function BenchmarkPanel({ onResult }: { onResult: (r: BenchmarkRe
               value={algorithm}
               onChange={(e) => setAlgorithm(e.target.value as Algorithm)}
             >
-              <option value="sequential">Последовательный</option>
-              <option value="parallel">Параллельный</option>
-              <option value="both">Оба</option>
+                <option value="sequential">Последовательный</option>
+                <option value="cpu_parallel">Параллельный CPU</option>
+                <option value="gpu_opencl">Параллельный GPU (OpenCL)</option>
+                <option value="all">Все три</option>
             </select>
           </div>
         </div>
