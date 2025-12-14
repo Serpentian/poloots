@@ -56,17 +56,20 @@ class RootsResponse(BaseModel):
 
 
 class BenchmarkRequest(BaseModel):
-    p: int = Field(..., ge=2)
+    p_values: Optional[List[int]] = None
     algorithm: Algorithm
-    sizes: List[int] = Field(..., min_length=1)
+    degree_values: Optional[List[int]] = None
     seed: Optional[int] = 123
 
 
-class BenchmarkResponse(BaseModel):
+class BenchmarkPoint(BaseModel):
     p: int
-    sizes: List[int]
-    timings_ms: Dict[str, List[float]]
-    parallel_backend: Optional[str]
+    degree: int
+    time_ms: float
+
+
+class BenchmarkResponse(BaseModel):
+    points: Dict[str, List[BenchmarkPoint]]
 
 
 # ---------------- Utils ----------------
@@ -264,45 +267,61 @@ def api_roots(req: RootsRequest):
         parallel_backend="opencl" if get_opencl_mgr() else "cpu",
     )
 
+def random_poly(degree: int, p: int, rng: np.random.Generator) -> np.ndarray:
+    """
+    Генерирует случайный многочлен степени `degree` над F_p.
+    Коэффициенты: uint32 в [0, p-1], старший коэффициент != 0.
+    """
+    coeffs = rng.integers(0, p, size=(degree + 1,), dtype=np.uint32)
+    if coeffs[-1] == 0:
+        coeffs[-1] = np.uint32(rng.integers(1, p))
+    return coeffs
 
 @app.post("/api/benchmark", response_model=BenchmarkResponse)
 def api_benchmark(req: BenchmarkRequest):
     rng = np.random.default_rng(req.seed)
-    timings: Dict[str, List[float]] = {}
 
-    for alg in ("sequential", "cpu_parallel", "gpu_opencl"):
-        if req.algorithm not in (alg, "all"):
-            continue
-        timings[alg] = []
+    p_values = req.p_values
+    degree_values = req.degree_values
+    alg = req.algorithm
 
-    for deg in req.sizes:
-        coeffs = normalize_coeffs(
-            rng.integers(0, req.p, size=deg + 1).tolist(), req.p
+    results: Dict[str, List[BenchmarkPoint]] = {}
+
+    def add_point(key: str, p: int, deg: int, ms: float):
+        results.setdefault(key, []).append(
+            BenchmarkPoint(p=p, degree=deg, time_ms=ms)
         )
 
-        if "sequential" in timings:
-            _, ms = timed(roots_sequential, coeffs, req.p)
-            timings["sequential"].append(ms)
+    # warm-up
+    warm_poly = random_poly(8, p_values[0], rng)
+    _ = roots_sequential(warm_poly, p_values[0])
+    _ = roots_cpu_parallel(warm_poly, p_values[0])
+    if alg in ("gpu_opencl", "all"):
+        mgr = get_opencl_mgr()
+        if mgr:
+            _ = mgr.roots_opencl(warm_poly, p_values[0])
 
-        if "cpu_parallel" in timings:
-            _, ms = timed(roots_cpu_parallel, coeffs, req.p)
-            timings["cpu_parallel"].append(ms)
+    for p in p_values:
+        for deg in degree_values:
+            coeffs = random_poly(deg, p, rng)
 
-        if "gpu_opencl" in timings:
-            mgr = get_opencl_mgr()
-            if mgr:
-                _, ms = timed(mgr.roots_opencl, coeffs, req.p)
-                timings["gpu_opencl"].append(ms)
-            else:
-                timings["gpu_opencl"].append(float("nan"))
+            if alg in ("sequential", "all"):
+                _, ms = timed(roots_sequential, coeffs, p)
+                add_point("sequential", p, deg, ms)
 
-    return BenchmarkResponse(
-        p=req.p,
-        sizes=req.sizes,
-        timings_ms=timings,
-        parallel_backend="opencl" if get_opencl_mgr() else "cpu",
-    )
+            if alg in ("cpu_parallel", "all"):
+                _, ms = timed(roots_cpu_parallel, coeffs, p)
+                add_point("cpu_parallel", p, deg, ms)
 
+            if alg in ("gpu_opencl", "all"):
+                mgr = get_opencl_mgr()
+                if mgr:
+                    _, ms = timed(mgr.roots_opencl, coeffs, p)
+                    add_point("gpu_opencl", p, deg, ms)
+                else:
+                    add_point("gpu_opencl", p, deg, float("nan"))
+
+    return BenchmarkResponse(points=results)
 
 # Run:
 # LOG_LEVEL=DEBUG uvicorn main:app --host 0.0.0.0 --port 8000
