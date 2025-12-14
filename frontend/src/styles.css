@@ -24,7 +24,6 @@
 }
 
 * { box-sizing: border-box; }
-html, body { height: 100%; }
 
 body{
   margin: 0;
@@ -34,23 +33,16 @@ body{
   -moz-osx-font-smoothing: grayscale;
 }
 
-body::before{
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-
+html, body {
+  min-height: 100vh;
+  margin: 0;
   background:
     radial-gradient(1100px 700px at 15% -10%, rgba(124,92,255,.35), transparent 60%),
     radial-gradient(900px 600px at 90% 0%, rgba(34,197,94,.25), transparent 55%),
     radial-gradient(800px 650px at 40% 120%, rgba(251,191,36,.15), transparent 55%),
     linear-gradient(180deg, var(--bg0), var(--bg1));
-}
-
-body::before{
   background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-attachment: scroll; /* 👈 важно */
 }
 
 a { color: inherit; }
