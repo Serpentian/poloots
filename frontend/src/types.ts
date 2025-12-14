@@ -19,22 +19,25 @@ export type RootsResponse = {
   };
 };
 
-export type BenchmarkRequest = {
+export type BenchmarkPoint = {
   p: number;
-  algorithm: Algorithm;      // обычно "both", чтобы сравнить
-  sizes: number[];           // “размеры входа”, например степени многочлена или количество тестов
-  // Ниже — как именно бэкенд трактует size (степень/кол-во полиномов/и т.п.) — на твоё усмотрение.
-  // Главное — чтобы бэкенд вернул времена по каждому size.
-  seed?: number;
+  degree: number;
+  time_ms: number;
 };
 
 export type BenchmarkResponse = {
-  p: number;
-  sizes: number[];
-  timings_ms: {
-    sequential?: number[];
-    parallel?: number[];
+  points: {
+    sequential?: BenchmarkPoint[];
+    cpu_parallel?: BenchmarkPoint[];
+    gpu_opencl?: BenchmarkPoint[];
   };
+};
+
+export type BenchmarkRequest = {
+  p_values: number[];
+  degree_values: number[];
+  algorithm: Algorithm;
+  seed?: number;
 };
 
 export type LastProblem = {
